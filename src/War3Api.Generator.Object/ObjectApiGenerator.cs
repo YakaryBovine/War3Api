@@ -759,7 +759,7 @@ namespace War3Api.Generator.Object
             }
             else
             {
-                if (_skinStringsRepository.TryGetValue(Utils.IdToFourCc(objectType.Value), propertyModel.DataName, 1,
+                if (_skinStringsRepository.TryGetValue(Utils.IdToFourCc(objectType.Value), propertyModel.DataName,
                         out var value))
                 {
                     var propertyValue =

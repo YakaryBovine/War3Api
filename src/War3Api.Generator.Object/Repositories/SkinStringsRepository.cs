@@ -36,8 +36,25 @@ public sealed class SkinStringsRepository
             {
                 return skinField.TryGetValueByLevel(level, out value);
             }
+        }
 
-            ;
+        value = null;
+        return false;
+    }
+
+    /// <summary>
+    /// Tries to get the value of a particular skin's field, according to any skin file.
+    /// </summary>
+    /// <returns>True if a value was provided in the out parameter.</returns>
+    public bool TryGetValue(string skinId, string fieldName, [NotNullWhen(true)] out string? value)
+    {
+        if (_skinValuesBySkinId.TryGetValue(skinId, out var skinData))
+        {
+            if (skinData.TryGetField(fieldName, out var skinField))
+            {
+                value = skinField.Value;
+                return true;
+            }
         }
 
         value = null;
@@ -75,17 +92,8 @@ public sealed class SkinStringsRepository
                 var splitPosition = line.IndexOf('=', StringComparison.Ordinal);
                 var key = line[..splitPosition];
                 var values = line[(splitPosition + 1)..];
-                var newSkinField = new SkinField();
+                var newSkinField = new SkinField(values);
                 activeSkinData!.TryAddField(key, newSkinField);
-
-                var valuesSplitByLevel = values.Split(',');
-                var i = 1;
-                foreach (var value in valuesSplitByLevel)
-                {
-                    var cleanedValue = CleanCasterUpgradeString(key, value);
-                    newSkinField.AddForLevel(i, cleanedValue);
-                    i++;
-                }
             }
         }
     }

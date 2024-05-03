@@ -2,13 +2,21 @@
 
 namespace War3Api.Generator.Object.Repositories;
 
-public class SkinField
+public sealed class SkinField
 {
     private readonly Dictionary<int, string> _valuesByLevel = new();
 
-    public void AddForLevel(int level, string value)
+    public string Value { get; }
+
+    public SkinField(string value)
     {
-        _valuesByLevel.Add(level, value);
+        Value = value;
+        var i = 1;
+        foreach (var leveledValue in value.Split(','))
+        {
+            _valuesByLevel.Add(i, leveledValue);
+            i++;
+        };
     }
 
     public bool TryGetValueByLevel(int level, out string value)
