@@ -30,8 +30,13 @@ public sealed class SkinStringsRepository
     /// <returns>True if a value was provided in the out parameter.</returns>
     public bool TryGetValue(string skinId, string fieldName, [NotNullWhen(true)] out string? value)
     {
-        var skinValues = _skinValuesBySkinId[skinId];
-        return skinValues.TryGetValue(fieldName, out value);
+        if (_skinValuesBySkinId.TryGetValue(skinId, out var skinValues))
+        {
+            return skinValues.TryGetValue(fieldName, out value);
+        }
+
+        value = null;
+        return false;
     }
 
     private void AddSkinFileToLookup(string inputFolder, string skinFilePath)

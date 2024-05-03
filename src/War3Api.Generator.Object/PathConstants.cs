@@ -51,7 +51,7 @@ namespace War3Api.Generator.Object
         internal const string BuffMetaDataPath = @"units\abilitybuffmetadata.slk";
         internal const string UpgradeMetaDataPath = @"units\upgrademetadata.slk";
 
-        // Localization
+        // Localized skins
         private const string CampaignAbilityStringsPath = @"_locales\enus.w3mod\units\campaignabilitystrings.txt";
         private const string CampaignUnitStringsPath = @"_locales\enus.w3mod\units\campaignunitstrings.txt";
         private const string CampaignUpgradesStringsPath = @"_locales\enus.w3mod\units\campaignupgradestrings.txt";
@@ -78,6 +78,10 @@ namespace War3Api.Generator.Object
         private const string UnitGlobalStringsPath = @"_locales\enus.w3mod\units\unitglobalstrings.txt";
         private const string UnitSkinStringsPath = @"_locales\enus.w3mod\units\unitskinstrings.txt";
         private const string UpgradeSkinStringsPath = @"_locales\enus.w3mod\units\upgradeskinstrings.txt";
+
+        // Non-localized skins
+        private const string DestructableSkinPath = @"units\destructableskin.txt";
+        private const string DoodadSkinsPath = @"doodads\doodadskins.txt";
 
         /// <summary>
         /// Gets the paths to all strings.txt files, which store skin-based information about objects.
@@ -110,6 +114,9 @@ namespace War3Api.Generator.Object
             yield return UnitGlobalStringsPath;
             yield return UnitSkinStringsPath;
             yield return UpgradeSkinStringsPath;
+
+            yield return DestructableSkinPath;
+            yield return DoodadSkinsPath;
         }
     }
 }
