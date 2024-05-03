@@ -744,24 +744,30 @@ namespace War3Api.Generator.Object
 
             if (propertyModel.Repeat > 0)
             {
-                // for (var i = 1; i <= propertyModel.Repeat; i++)
-                // {
-                //     var value = dataTable.Table[propertyModel.DataColumns[i - 1], dataRow];
-                //     var propertyValue =
-                //         GetPropertyValue(
-                //             typeModel.IsStringProperty ? ObjectDataType.String : dataTypeModel.UnderlyingType, value);
-                //
-                //     statements.Add(GenerateElementAccessExpression(left, i, propertyValue));
-                // }
+                for (var i = 1; i <= propertyModel.Repeat; i++)
+                {
+                    if (_skinStringsRepository.TryGetValue(Utils.IdToFourCc(objectType.Value), propertyModel.DataName,
+                            out var value))
+                    {
+                        var propertyValue =
+                            GetPropertyValue(
+                                typeModel.IsStringProperty ? ObjectDataType.String : dataTypeModel.UnderlyingType, value);
+
+                        statements.Add(GenerateElementAccessExpression(left, i, propertyValue));
+                    }
+                }
             }
             else
             {
-                // var value = dataTable.Table[propertyModel.DataColumn, dataRow];
-                // var propertyValue =
-                //     GetPropertyValue(typeModel.IsStringProperty ? ObjectDataType.String : dataTypeModel.UnderlyingType,
-                //         value);
-                //
-                // statements.Add(GenerateElementSetExpression(left, propertyValue));
+                if (_skinStringsRepository.TryGetValue(Utils.IdToFourCc(objectType.Value), propertyModel.DataName,
+                        out var value))
+                {
+                    var propertyValue =
+                        GetPropertyValue(typeModel.IsStringProperty ? ObjectDataType.String : dataTypeModel.UnderlyingType,
+                            value);
+
+                    statements.Add(GenerateElementSetExpression(left, propertyValue));
+                }
             }
         }
 

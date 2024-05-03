@@ -1,5 +1,7 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
 namespace War3Api.Generator.Object.Repositories;
@@ -20,6 +22,16 @@ public sealed class SkinStringsRepository
         {
             AddSkinFileToLookup(inputFolder, skinFilePath);
         }
+    }
+
+    /// <summary>
+    /// Tries to get the value of a particular skin's field, according to any skin file.
+    /// </summary>
+    /// <returns>True if a value was provided in the out parameter.</returns>
+    public bool TryGetValue(string skinId, string fieldName, [NotNullWhen(true)] out string? value)
+    {
+        var skinValues = _skinValuesBySkinId[skinId];
+        return skinValues.TryGetValue(fieldName, out value);
     }
 
     private void AddSkinFileToLookup(string inputFolder, string skinFilePath)
