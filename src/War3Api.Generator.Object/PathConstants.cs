@@ -60,7 +60,7 @@ namespace War3Api.Generator.Object
         private const string HumanAbilityStringsPath = @"_locales\enus.w3mod\units\humanabilitystrings.txt";
         private const string HumanUnitStringsPath = @"_locales\enus.w3mod\units\humanunitstrings.txt";
         private const string HumanUpgradeStringsPath = @"_locales\enus.w3mod\units\humanupgradestrings.txt";
-        private const string ItemAbilityStringsPath = @"_locales\enus.w3mod\units\itemabilityskins.txt";
+        private const string ItemAbilityStringsPath = @"_locales\enus.w3mod\units\itemabilitystrings.txt";
         private const string ItemSkinStringsPath = @"_locales\enus.w3mod\units\itemskinstrings.txt";
         private const string ItemtStringsPath = @"_locales\enus.w3mod\units\itemstrings.txt";
         private const string NeutralAbilityStringsPath = @"_locales\enus.w3mod\units\neutralabilitystrings.txt";

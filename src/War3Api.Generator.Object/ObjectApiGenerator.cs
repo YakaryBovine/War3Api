@@ -22,6 +22,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 using War3Api.Generator.Object.Extensions;
 using War3Api.Generator.Object.Models;
+using War3Api.Generator.Object.Repositories;
 
 using War3Net.Build.Object;
 using War3Net.Common.Extensions;
@@ -44,6 +45,7 @@ namespace War3Api.Generator.Object
         private static string _inputFolder;
         private static string _outputFolder;
         private static bool _initialized = false;
+        private static SkinStringsRepository _skinStringsRepository;
 
         public static bool IsInitialized => _initialized;
 
@@ -67,6 +69,7 @@ namespace War3Api.Generator.Object
             _typeModels = ModelService.GetTypeModels().ToList();
             _typeModelsDict = _typeModels.ToDictionary(type => type.Name);
             _dataTypeModels = ModelService.GetDataTypeModels().ToDictionary(type => type.Type);
+            _skinStringsRepository = new SkinStringsRepository(inputFolder, PathConstants.GetSkinStringsPaths());
 
             _initialized = true;
         }
