@@ -70,8 +70,12 @@ public sealed class SkinStringsRepository
                 var splitPosition = line.IndexOf('=', StringComparison.Ordinal);
                 var key = line[..splitPosition];
                 var value = line[(splitPosition + 1)..];
-                activeSkinValues!.TryAdd(key, value);
+                var cleanedValue = CleanCasterUpgradeString(key, value);
+                activeSkinValues!.TryAdd(key, cleanedValue);
             }
         }
     }
+
+    private static string CleanCasterUpgradeString(string key, string value) =>
+        key == "Casterupgradetip" ? value.Replace("\"", string.Empty) : value;
 }
