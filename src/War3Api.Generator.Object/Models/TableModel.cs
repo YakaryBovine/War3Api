@@ -1,4 +1,4 @@
-﻿using System;
+﻿#nullable enable
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -54,15 +54,15 @@ namespace War3Api.Generator.Object.Models
             }
         }
 
-        public SylkTable Table { get; set; }
+        public SylkTable Table { get; }
 
-        public int TableKeyColumn { get; set; }
+        public int TableKeyColumn { get; }
 
-        public int TableNameColumn { get; set; }
+        public int TableNameColumn { get; }
 
-        public string TableName { get; set; }
+        public string TableName { get; }
 
-        public IReadOnlyDictionary<int, int>? ObjectToRowMappings { get; set; }
+        public IReadOnlyDictionary<int, int>? ObjectToRowMappings { get; }
 
         public void AddValues(Dictionary<string, string> dict)
         {

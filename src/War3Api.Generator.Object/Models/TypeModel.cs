@@ -24,6 +24,8 @@ namespace War3Api.Generator.Object.Models
         // Name in .cs
         public string FullIdentifier => Category == TypeModelCategory.List ? $"{ObjectApiGenerator.ListTypeName}<{Identifier}>" : Identifier;
 
+        public bool IsStringProperty => Category is not (TypeModelCategory.Basic or TypeModelCategory.EnumInt or TypeModelCategory.EnumFlags);
+
         public override string ToString() => FullIdentifier + $" ({Name})";
     }
 }

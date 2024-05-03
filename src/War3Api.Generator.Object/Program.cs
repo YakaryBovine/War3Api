@@ -13,7 +13,7 @@ namespace War3Api.Generator.Object
 {
     internal static class Program
     {
-        private const string Version = "1.31.1.12173";
+        private const string Version = "1.36.1";
         private const string InputFolder = @"..\..\..\API";
         private const string OutputFolder = @"..\..\..\..\War3Api.Object\Generated";
 

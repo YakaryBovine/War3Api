@@ -5,6 +5,8 @@
 // </copyright>
 // ------------------------------------------------------------------------------
 
+using System.Collections.Generic;
+
 namespace War3Api.Generator.Object
 {
     internal static class PathConstants
@@ -48,5 +50,66 @@ namespace War3Api.Generator.Object
         internal const string AbilityMetaDataPath = @"units\abilitymetadata.slk";
         internal const string BuffMetaDataPath = @"units\abilitybuffmetadata.slk";
         internal const string UpgradeMetaDataPath = @"units\upgrademetadata.slk";
+
+        // Localization
+        private const string CampaignAbilityStringsPath = @"_locales\enus.w3mod\units\campaignabilitystrings.txt";
+        private const string CampaignUnitStringsPath = @"_locales\enus.w3mod\units\campaignunitstrings.txt";
+        private const string CampaignUpgradesStringsPath = @"_locales\enus.w3mod\units\campaignupgradestrings.txt";
+        private const string CommonAbilityStringsPath = @"_locales\enus.w3mod\units\commonabilitystrings.txt";
+        private const string DestructableSkinStringsPath = @"_locales\enus.w3mod\units\destructableskinstrings.txt";
+        private const string HumanAbilityStringsPath = @"_locales\enus.w3mod\units\humanabilitystrings.txt";
+        private const string HumanUnitStringsPath = @"_locales\enus.w3mod\units\humanunitstrings.txt";
+        private const string HumanUpgradeStringsPath = @"_locales\enus.w3mod\units\humanupgradestrings.txt";
+        private const string ItemAbilityStringsPath = @"_locales\enus.w3mod\units\itemabilityskins.txt";
+        private const string ItemSkinStringsPath = @"_locales\enus.w3mod\units\itemskinstrings.txt";
+        private const string ItemtStringsPath = @"_locales\enus.w3mod\units\itemstrings.txt";
+        private const string NeutralAbilityStringsPath = @"_locales\enus.w3mod\units\neutralabilitystrings.txt";
+        private const string NeutralUnitStringsPath = @"_locales\enus.w3mod\units\neutralunitstrings.txt";
+        private const string NeutralUpgradeStringsPath = @"_locales\enus.w3mod\units\neutralupgradestrings.txt";
+        private const string NightElfAbilityStringsPath = @"_locales\enus.w3mod\units\nightelfabilitystrings.txt";
+        private const string NightElfUnitStringsPath = @"_locales\enus.w3mod\units\nightelfunitstrings.txt";
+        private const string NightElfUpgradeStringsPath = @"_locales\enus.w3mod\units\nightelfupgradestrings.txt";
+        private const string OrcAbilityStringsPath = @"_locales\enus.w3mod\units\orcabilitystrings.txt";
+        private const string OrcUnitStringsPath = @"_locales\enus.w3mod\units\orcunitstrings.txt";
+        private const string OrcUpgradeStringsPath = @"_locales\enus.w3mod\units\orcupgradestrings.txt";
+        private const string UndeadAbilityStringsPath = @"_locales\enus.w3mod\units\undeadabilitystrings.txt";
+        private const string UndeadUnitStringsPath = @"_locales\enus.w3mod\units\undeadunitstrings.txt";
+        private const string UndeadUpgradeStringsPath = @"_locales\enus.w3mod\units\undeadupgradestrings.txt";
+        private const string UnitGlobalStringsPath = @"_locales\enus.w3mod\units\unitglobalstrings.txt";
+        private const string UnitSkinStringsPath = @"_locales\enus.w3mod\units\unitskinstrings.txt";
+        private const string UpgradeSkinStringsPath = @"_locales\enus.w3mod\units\upgradeskinstrings.txt";
+
+        /// <summary>
+        /// Gets the paths to all strings.txt files, which store skin-based information about objects.
+        /// </summary>
+        internal static IEnumerable<string> GetSkinStringsPaths()
+        {
+            yield return CampaignAbilityStringsPath;
+            yield return CampaignUnitStringsPath;
+            yield return CampaignUpgradesStringsPath;
+            yield return CommonAbilityStringsPath;
+            yield return DestructableSkinStringsPath;
+            yield return HumanAbilityStringsPath;
+            yield return HumanUnitStringsPath;
+            yield return HumanUpgradeStringsPath;
+            yield return ItemAbilityStringsPath;
+            yield return ItemSkinStringsPath;
+            yield return ItemtStringsPath;
+            yield return NeutralAbilityStringsPath;
+            yield return NeutralUnitStringsPath;
+            yield return NeutralUpgradeStringsPath;
+            yield return NightElfAbilityStringsPath;
+            yield return NightElfUnitStringsPath;
+            yield return NightElfUpgradeStringsPath;
+            yield return OrcAbilityStringsPath;
+            yield return OrcUnitStringsPath;
+            yield return OrcUpgradeStringsPath;
+            yield return UndeadAbilityStringsPath;
+            yield return UndeadUnitStringsPath;
+            yield return UndeadUpgradeStringsPath;
+            yield return UnitGlobalStringsPath;
+            yield return UnitSkinStringsPath;
+            yield return UpgradeSkinStringsPath;
+        }
     }
 }

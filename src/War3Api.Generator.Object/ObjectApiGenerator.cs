@@ -230,9 +230,8 @@ namespace War3Api.Generator.Object
 
         internal static EnumMemberModel CreateEnumMemberModel(string name, string value)
         {
-            var enumMemberModel = new EnumMemberModel();
+            var enumMemberModel = new EnumMemberModel { DisplayName = Localize(name) };
 
-            enumMemberModel.DisplayName = Localize(name);
             enumMemberModel.Name = enumMemberModel.DisplayName.Dehumanize();
             enumMemberModel.Value = value.FromRawcode();
 
@@ -257,10 +256,10 @@ namespace War3Api.Generator.Object
                 { "Upgrade", false },
             };
 
-            return GetProperties(className, objectTypeName, properties, mapToUsesVariationBool[className], isAbstractClass, null);
+            return GetProperties(className, properties, mapToUsesVariationBool[className], isAbstractClass, null);
         }
 
-        internal static IEnumerable<MemberDeclarationSyntax> GetProperties(string className, string objectTypeName, IEnumerable<PropertyModel> properties, bool? usesVariation, bool isAbstractClass, int? typeId)
+        internal static IEnumerable<MemberDeclarationSyntax> GetProperties(string className, IEnumerable<PropertyModel> properties, bool? usesVariation, bool isAbstractClass, int? typeId)
         {
             const string ModificationsPropertyName = "Modifications";
 
@@ -690,57 +689,16 @@ namespace War3Api.Generator.Object
 
             foreach (var propertyModel in objectProperties)
             {
-                if (!dataTables.TryGetValue(propertyModel.DataSource, out var dataTable))
+                if (propertyModel.DataSource == "Profile")
                 {
+                    GeneratePropertyInitExpressionFromSkinFile(objectType, propertyModel, objectVariableName, statements);
                     continue;
                 }
 
-                if (!dataTable.ObjectToRowMappings.TryGetValue(objectType.Value, out var dataRow))
+                if (dataTables.TryGetValue(propertyModel.DataSource, out var dataTable)
+                    && dataTable.ObjectToRowMappings.TryGetValue(objectType.Value, out var dataRow))
                 {
-                    continue;
-                }
-
-                var uniqueName = propertyModel.SpecificUniqueNames.TryGetValue(objectType.Value, out var specificUniqueName)
-                    ? specificUniqueName
-                    : propertyModel.UniqueName;
-
-                var type = propertyModel.Type;
-                if (!_typeModelsDict.TryGetValue(type, out var typeModel))
-                {
-                    throw new InvalidDataException($"Unknown type '{type}' for property {uniqueName} ('{propertyModel.Rawcode}').");
-                }
-
-                var dataTypeModel = _dataTypeModels[typeModel.Type];
-
-                var hasRawProperty = typeModel.Category != TypeModelCategory.Basic || dataTypeModel.Type != dataTypeModel.UnderlyingType;
-                var isStringProperty = typeModel.Category != TypeModelCategory.Basic && typeModel.Category != TypeModelCategory.EnumInt && typeModel.Category != TypeModelCategory.EnumFlags;
-
-                var left = hasRawProperty ? $"{objectVariableName}.{uniqueName}Raw" : $"{objectVariableName}.{uniqueName}";
-
-                if (propertyModel.Repeat > 0)
-                {
-                    for (var i = 1; i <= propertyModel.Repeat; i++)
-                    {
-                        var value = dataTable.Table[propertyModel.DataColumns[i - 1], dataRow];
-                        var propertyValue = GetPropertyValue(isStringProperty ? ObjectDataType.String : dataTypeModel.UnderlyingType, value);
-
-                        statements.Add(SyntaxFactory.ExpressionStatement(SyntaxFactory.AssignmentExpression(
-                            SyntaxKind.SimpleAssignmentExpression,
-                            SyntaxFactory.ElementAccessExpression(
-                                SyntaxFactory.ParseExpression(left),
-                                SyntaxFactory.BracketedArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Argument(SyntaxFactory.ParseExpression(i.ToString()))))),
-                            SyntaxFactory.ParseExpression(propertyValue))));
-                    }
-                }
-                else
-                {
-                    var value = dataTable.Table[propertyModel.DataColumn, dataRow];
-                    var propertyValue = GetPropertyValue(isStringProperty ? ObjectDataType.String : dataTypeModel.UnderlyingType, value);
-
-                    statements.Add(SyntaxFactory.ExpressionStatement(SyntaxFactory.AssignmentExpression(
-                        SyntaxKind.SimpleAssignmentExpression,
-                        SyntaxFactory.ParseExpression(left),
-                        SyntaxFactory.ParseExpression(propertyValue))));
+                    GeneratePropertyInitExpressionFromTable(objectType, propertyModel, objectVariableName, dataTable, dataRow, statements);
                 }
             }
 
@@ -757,13 +715,138 @@ namespace War3Api.Generator.Object
                 statements);
         }
 
+        /// <summary>
+        /// Generates a property assignment or element access expression for a property that comes from a localized skin file,
+        /// such as humanunitsstring.txt or nightelfupgradestrings.txt.
+        /// </summary>
+        private static void GeneratePropertyInitExpressionFromSkinFile(EnumMemberModel objectType, PropertyModel propertyModel,
+            string objectVariableName, ICollection<StatementSyntax> statements)
+        {
+            var uniqueName =
+                propertyModel.SpecificUniqueNames.TryGetValue(objectType.Value, out var specificUniqueName)
+                    ? specificUniqueName
+                    : propertyModel.UniqueName;
+
+            if (!_typeModelsDict.TryGetValue(propertyModel.Type, out var typeModel))
+            {
+                throw new InvalidDataException(
+                    $"Unknown type '{propertyModel.Type}' for property {uniqueName} ('{propertyModel.Rawcode}').");
+            }
+
+            var dataTypeModel = _dataTypeModels[typeModel.Type];
+
+            var left = HasRawProperty(typeModel, dataTypeModel)
+                ? $"{objectVariableName}.{uniqueName}Raw"
+                : $"{objectVariableName}.{uniqueName}";
+
+            if (propertyModel.Repeat > 0)
+            {
+                // for (var i = 1; i <= propertyModel.Repeat; i++)
+                // {
+                //     var value = dataTable.Table[propertyModel.DataColumns[i - 1], dataRow];
+                //     var propertyValue =
+                //         GetPropertyValue(
+                //             typeModel.IsStringProperty ? ObjectDataType.String : dataTypeModel.UnderlyingType, value);
+                //
+                //     statements.Add(GenerateElementAccessExpression(left, i, propertyValue));
+                // }
+            }
+            else
+            {
+                // var value = dataTable.Table[propertyModel.DataColumn, dataRow];
+                // var propertyValue =
+                //     GetPropertyValue(typeModel.IsStringProperty ? ObjectDataType.String : dataTypeModel.UnderlyingType,
+                //         value);
+                //
+                // statements.Add(GenerateElementSetExpression(left, propertyValue));
+            }
+        }
+
+        /// <summary>
+        /// Generates a property assignment or element access expression for a property that comes from an SLK table,
+        /// such as itemdata.slk or doodads.slk.
+        /// </summary>
+        private static void GeneratePropertyInitExpressionFromTable(EnumMemberModel objectType, PropertyModel propertyModel,
+            string objectVariableName, TableModel dataTable, int dataRow, ICollection<StatementSyntax> statements)
+        {
+            var uniqueName =
+                propertyModel.SpecificUniqueNames.TryGetValue(objectType.Value, out var specificUniqueName)
+                    ? specificUniqueName
+                    : propertyModel.UniqueName;
+
+            if (!_typeModelsDict.TryGetValue(propertyModel.Type, out var typeModel))
+            {
+                throw new InvalidDataException(
+                    $"Unknown type '{propertyModel.Type}' for property {uniqueName} ('{propertyModel.Rawcode}').");
+            }
+
+            var dataTypeModel = _dataTypeModels[typeModel.Type];
+
+            var left = HasRawProperty(typeModel, dataTypeModel)
+                ? $"{objectVariableName}.{uniqueName}Raw"
+                : $"{objectVariableName}.{uniqueName}";
+
+            if (propertyModel.Repeat > 0)
+            {
+                for (var i = 1; i <= propertyModel.Repeat; i++)
+                {
+                    var value = dataTable.Table[propertyModel.DataColumns[i - 1], dataRow];
+                    var propertyValue =
+                        GetPropertyValue(
+                            typeModel.IsStringProperty ? ObjectDataType.String : dataTypeModel.UnderlyingType, value);
+
+                    statements.Add(GenerateElementAccessExpression(left, i, propertyValue));
+                }
+            }
+            else
+            {
+                var value = dataTable.Table[propertyModel.DataColumn, dataRow];
+                var propertyValue =
+                    GetPropertyValue(typeModel.IsStringProperty ? ObjectDataType.String : dataTypeModel.UnderlyingType,
+                        value);
+
+                statements.Add(GenerateElementSetExpression(left, propertyValue));
+            }
+        }
+
+        private static ExpressionStatementSyntax GenerateElementSetExpression(string left, string propertyValue)
+        {
+            return SyntaxFactory.ExpressionStatement(SyntaxFactory.AssignmentExpression(
+                SyntaxKind.SimpleAssignmentExpression,
+                SyntaxFactory.ParseExpression(left),
+                SyntaxFactory.ParseExpression(propertyValue)));
+        }
+
+        private static ExpressionStatementSyntax GenerateElementAccessExpression(string left, int index, string propertyValue)
+        {
+            return SyntaxFactory.ExpressionStatement(SyntaxFactory.AssignmentExpression(
+                SyntaxKind.SimpleAssignmentExpression,
+                SyntaxFactory.ElementAccessExpression(
+                    SyntaxFactory.ParseExpression(left),
+                    SyntaxFactory.BracketedArgumentList(
+                        SyntaxFactory.SingletonSeparatedList(
+                            SyntaxFactory.Argument(SyntaxFactory.ParseExpression(index.ToString()))))),
+                SyntaxFactory.ParseExpression(propertyValue)));
+        }
+
+        /// <summary>
+        /// Returns true if the property represented by the provided models should have a corresponding "raw" version, i.e.
+        /// a text-based interpretation of a data type. For instance, UnitsTrained should have both UnitsTrained and
+        /// UnitsTrainedRaw.
+        /// </summary>
+        private static bool HasRawProperty(TypeModel typeModel, DataTypeModel dataTypeModel)
+        {
+            return typeModel.Category != TypeModelCategory.Basic ||
+                   dataTypeModel.Type != dataTypeModel.UnderlyingType;
+        }
+
         private static string GetPropertyValue(ObjectDataType objectDataType, object value)
         {
             return objectDataType switch
             {
-                ObjectDataType.Int => value is null || value is string ? $"{default(int)}" : $"{value}",
-                ObjectDataType.Real => value is null || value is string ? $"{default(float)}f" : $"{value}f",
-                ObjectDataType.Unreal => value is null || value is string ? $"{default(float)}f" : $"{value}f",
+                ObjectDataType.Int => value is null or string ? $"{default(int)}" : $"{value}",
+                ObjectDataType.Real => value is null or string ? $"{default(float)}f" : $"{value}f",
+                ObjectDataType.Unreal => value is null or string ? $"{default(float)}f" : $"{value}f",
                 ObjectDataType.String => value is null ? "null" : $"\"{Localize((string)value).Trim('"').Replace("\\", @"\\", StringComparison.Ordinal)}\"",
 
                 _ => throw new InvalidEnumArgumentException(nameof(objectDataType), (int)objectDataType, typeof(ObjectDataType)),
@@ -797,10 +880,7 @@ namespace War3Api.Generator.Object
                 {
                     if (table[column, row] is string s)
                     {
-                        if (s != null)
-                        {
-                            table[column, row] = Localize(s);
-                        }
+                        table[column, row] = Localize(s);
                     }
                 }
             }
@@ -813,30 +893,20 @@ namespace War3Api.Generator.Object
             var worldEditStrings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var stringsFile in new[] { PathConstants.WorldEditGameStringsPath, PathConstants.WorldEditStringsPath })
             {
-                using (var worldEditStringsFile = File.OpenRead(Path.Combine(_inputFolder, stringsFile)))
+                using var worldEditStringsFile = File.OpenRead(Path.Combine(_inputFolder, stringsFile));
+                using var worldEditStringsReader = new StreamReader(worldEditStringsFile);
+                while (!worldEditStringsReader.EndOfStream)
                 {
-                    using (var worldEditStringsReader = new StreamReader(worldEditStringsFile))
+                    var line = worldEditStringsReader.ReadLine();
+                    if (!line.StartsWith("WESTRING", StringComparison.OrdinalIgnoreCase))
                     {
-                        while (!worldEditStringsReader.EndOfStream)
-                        {
-                            var line = worldEditStringsReader.ReadLine();
-                            if (line.StartsWith("WESTRING", StringComparison.OrdinalIgnoreCase))
-                            {
-                                var splitPosition = line.IndexOf('=', StringComparison.Ordinal);
-                                var key = line.Substring(0, splitPosition);
-                                var value = line.Substring(splitPosition + 1);
-                                if (!worldEditStrings.TryAdd(key, value))
-                                {
-                                    /*if (string.Equals(worldEditStrings[key], value, StringComparison.Ordinal))
-                                    {
-                                        continue;
-                                    }
-
-                                    throw new Exception($"Key {key} already added:\r\nWas '{worldEditStrings[key]}'\r\nTried to add '{value}'");*/
-                                }
-                            }
-                        }
+                        continue;
                     }
+
+                    var splitPosition = line.IndexOf('=', StringComparison.Ordinal);
+                    var key = line[..splitPosition];
+                    var value = line[(splitPosition + 1)..];
+                    worldEditStrings.TryAdd(key, value);
                 }
             }
 
@@ -855,63 +925,58 @@ namespace War3Api.Generator.Object
 
         private static IEnumerable<(string, IDictionary<string, string[]>)> GetWorldEditData()
         {
-            var worldEditData = new Dictionary<string, Dictionary<string, string[]>>(StringComparer.Ordinal);
-            using (var worldEditDataFile = File.OpenRead(Path.Combine(_inputFolder, PathConstants.WorldEditDataPath)))
+            using var worldEditDataFile = File.OpenRead(Path.Combine(_inputFolder, PathConstants.WorldEditDataPath));
+            using var worldEditDataFileReader = new StreamReader(worldEditDataFile);
+            string currentDataSetKey = null;
+            Dictionary<string, string[]> currentDataSet = null;
+            while (!worldEditDataFileReader.EndOfStream)
             {
-                using (var worldEditDataFileReader = new StreamReader(worldEditDataFile))
+                var line = worldEditDataFileReader.ReadLine();
+                if (string.IsNullOrWhiteSpace(line) || line.StartsWith("//", StringComparison.Ordinal))
                 {
-                    string currentDataSetKey = null;
-                    Dictionary<string, string[]> currentDataSet = null;
-                    while (!worldEditDataFileReader.EndOfStream)
+                    continue;
+                }
+
+                if (line.StartsWith('[') && line.EndsWith(']'))
+                {
+                    if (currentDataSet != null)
                     {
-                        var line = worldEditDataFileReader.ReadLine();
-                        if (string.IsNullOrWhiteSpace(line) || line.StartsWith("//", StringComparison.Ordinal))
+                        yield return (currentDataSetKey, currentDataSet);
+                    }
+
+                    currentDataSetKey = line[1..^1];
+                    currentDataSet = new Dictionary<string, string[]>();
+                }
+                else
+                {
+                    var split = line.Split('=');
+                    if (split.Length != 2)
+                    {
+                        throw new InvalidDataException(line);
+                    }
+
+                    var keyString = split[0];
+                    var valueString = split[1];
+                    if (keyString.StartsWith("Num", StringComparison.Ordinal))
+                    {
+                        if (currentDataSet.Count == 0)
                         {
                             continue;
                         }
 
-                        if (line.StartsWith('[') && line.EndsWith(']'))
+                        if (int.Parse(valueString) != currentDataSet.Count)
                         {
-                            if (currentDataSet != null)
-                            {
-                                yield return (currentDataSetKey, currentDataSet);
-                            }
-
-                            currentDataSetKey = line[1..^1];
-                            currentDataSet = new Dictionary<string, string[]>();
-                        }
-                        else
-                        {
-                            var split = line.Split('=');
-                            if (split.Length != 2)
-                            {
-                                throw new InvalidDataException(line);
-                            }
-
-                            var keyString = split[0];
-                            var valueString = split[1];
-                            if (keyString.StartsWith("Num", StringComparison.Ordinal))
-                            {
-                                if (currentDataSet.Count == 0)
-                                {
-                                    continue;
-                                }
-
-                                if (int.Parse(valueString) != currentDataSet.Count)
-                                {
-                                    throw new InvalidDataException();
-                                }
-                            }
-                            else
-                            {
-                                currentDataSet.Add(keyString, valueString.Split(','));
-                            }
+                            throw new InvalidDataException();
                         }
                     }
-
-                    yield return (currentDataSetKey, currentDataSet);
+                    else
+                    {
+                        currentDataSet.Add(keyString, valueString.Split(','));
+                    }
                 }
             }
+
+            yield return (currentDataSetKey, currentDataSet);
         }
 
         internal static void GenerateEnumFile(EnumModel enumModel)
@@ -994,119 +1059,111 @@ namespace War3Api.Generator.Object
 
         private static IEnumerable<EnumModel> GetEnums()
         {
-            using (var unitEditorDataFile = File.OpenRead(Path.Combine(_inputFolder, PathConstants.EnumDataFilePath)))
+            using var unitEditorDataFile = File.OpenRead(Path.Combine(_inputFolder, PathConstants.EnumDataFilePath));
+            using var unitEditorDataReader = new StreamReader(unitEditorDataFile);
+            EnumModel currentEnumModel = null;
+            while (!unitEditorDataReader.EndOfStream)
             {
-                using (var unitEditorDataReader = new StreamReader(unitEditorDataFile))
+                var line = unitEditorDataReader.ReadLine();
+                if (string.IsNullOrWhiteSpace(line) || line.StartsWith("//", StringComparison.Ordinal))
                 {
-                    var currentEnumType = string.Empty;
-                    EnumModel currentEnumModel = null;
-                    while (!unitEditorDataReader.EndOfStream)
+                    continue;
+                }
+
+                if (line.StartsWith('[') && line.EndsWith(']'))
+                {
+                    if (currentEnumModel != null)
                     {
-                        var line = unitEditorDataReader.ReadLine();
-                        if (string.IsNullOrWhiteSpace(line) || line.StartsWith("//", StringComparison.Ordinal))
+                        yield return currentEnumModel;
+                    }
+
+                    var enumTypeModel = _typeModels.Single(typeModel => string.Equals(typeModel.Name, line[1..^1], StringComparison.Ordinal));
+
+                    currentEnumModel = new EnumModel(enumTypeModel.Identifier, enumTypeModel.Category == TypeModelCategory.EnumUnused);
+                }
+                else
+                {
+                    var split = line.Split('=');
+                    if (split.Length != 2)
+                    {
+                        throw new InvalidDataException(line);
+                    }
+
+                    var keyString = split[0];
+                    var valueString = split[1];
+                    if (string.Equals(keyString, "Sort", StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
+                    if (string.Equals(keyString, "NumValues", StringComparison.Ordinal))
+                    {
+                        if (int.Parse(valueString) != currentEnumModel.Members.Count)
                         {
-                            continue;
+                            throw new InvalidDataException();
+                        }
+                    }
+                    else if (keyString.EndsWith("_Alt") && int.TryParse(keyString.Split('_')[0], out var altKey))
+                    {
+                        if (!currentEnumModel.Members.Any(member => member.Value == altKey))
+                        {
+                            throw new InvalidDataException(line);
+                        }
+                    }
+                    else if (int.TryParse(keyString, out var key))
+                    {
+                        var values = valueString.Split(',');
+                        if (values.Length != 2 && values.Length != 3)
+                        {
+                            throw new InvalidDataException(line);
                         }
 
-                        if (line.StartsWith('[') && line.EndsWith(']'))
+                        var displayName = Localize(values[1]);
+                        if (displayName.StartsWith('"') && displayName.EndsWith('"'))
                         {
-                            if (currentEnumModel != null)
-                            {
-                                yield return currentEnumModel;
-                            }
+                            displayName = displayName[1..^1];
+                        }
 
-                            var enumTypeModel = _typeModels.Single(typeModel => string.Equals(typeModel.Name, line[1..^1], StringComparison.Ordinal));
+                        displayName = new string(displayName.Where(@char => @char != '&').ToArray());
+                        var splitName = displayName.Split(',');
+                        if (splitName.Length == 2 && string.Equals(splitName[0], splitName[1].Trim(), StringComparison.Ordinal))
+                        {
+                            displayName = splitName[0];
+                        }
 
-                            currentEnumModel = new EnumModel(enumTypeModel.Identifier, enumTypeModel.Category == TypeModelCategory.EnumUnused);
+                        var memberModel = new EnumMemberModel { DisplayName = displayName };
+                        if (int.TryParse(values[0], out var i))
+                        {
+                            memberModel.Name = displayName.Dehumanize();
+                            memberModel.Value = i;
                         }
                         else
                         {
-                            var split = line.Split('=');
-                            if (split.Length != 2)
+                            memberModel.Value = key;
+                            if (string.IsNullOrWhiteSpace(values[0]))
                             {
-                                throw new InvalidDataException(line);
+                                memberModel.Name = displayName.Dehumanize();
                             }
-
-                            var keyString = split[0];
-                            var valueString = split[1];
-                            if (string.Equals(keyString, "Sort", StringComparison.Ordinal))
+                            else if (!string.IsNullOrWhiteSpace(values[0].Dehumanize()))
                             {
-                                continue;
-                            }
-                            else if (string.Equals(keyString, "NumValues", StringComparison.Ordinal))
-                            {
-                                if (int.Parse(valueString) != currentEnumModel.Members.Count)
-                                {
-                                    throw new InvalidDataException();
-                                }
-                            }
-                            else if (keyString.EndsWith("_Alt") && int.TryParse(keyString.Split('_')[0], out var altKey))
-                            {
-                                if (!currentEnumModel.Members.Any(member => member.Value == altKey))
-                                {
-                                    throw new InvalidDataException(line);
-                                }
-
-                                // currentEnumModel.Members.Single(member => member.Value == altKey).AlternativeName = valueString;
-                            }
-                            else if (int.TryParse(keyString, out var key))
-                            {
-                                var values = valueString.Split(',');
-                                if (values.Length != 2 && values.Length != 3)
-                                {
-                                    throw new InvalidDataException(line);
-                                }
-
-                                var displayName = Localize(values[1]);
-                                if (displayName.StartsWith('"') && displayName.EndsWith('"'))
-                                {
-                                    displayName = displayName[1..^1];
-                                }
-
-                                displayName = new string(displayName.Where(@char => @char != '&').ToArray());
-                                var splitName = displayName.Split(',');
-                                if (splitName.Length == 2 && string.Equals(splitName[0], splitName[1].Trim(), StringComparison.Ordinal))
-                                {
-                                    displayName = splitName[0];
-                                }
-
-                                var memberModel = new EnumMemberModel();
-                                memberModel.DisplayName = displayName;
-                                // memberModel.GameVersion = values.Length == 3 ? int.Parse(values[2]) : 0;
-                                if (int.TryParse(values[0], out var i))
-                                {
-                                    memberModel.Name = displayName.Dehumanize();
-                                    memberModel.Value = i;
-                                }
-                                else
-                                {
-                                    memberModel.Value = key;
-                                    if (string.IsNullOrWhiteSpace(values[0]))
-                                    {
-                                        memberModel.Name = displayName.Dehumanize();
-                                    }
-                                    else if (!string.IsNullOrWhiteSpace(values[0].Dehumanize()))
-                                    {
-                                        memberModel.Name = values[0].Dehumanize();
-                                    }
-                                    else
-                                    {
-                                        memberModel.Name = values[0];
-                                    }
-                                }
-
-                                currentEnumModel.Members.Add(memberModel);
+                                memberModel.Name = values[0].Dehumanize();
                             }
                             else
                             {
-                                throw new InvalidDataException(line);
+                                memberModel.Name = values[0];
                             }
                         }
-                    }
 
-                    yield return currentEnumModel;
+                        currentEnumModel.Members.Add(memberModel);
+                    }
+                    else
+                    {
+                        throw new InvalidDataException(line);
+                    }
                 }
             }
+
+            yield return currentEnumModel;
         }
 
         internal static void GenerateDataConverter()
@@ -1269,7 +1326,7 @@ namespace War3Api.Generator.Object
                         {
                             SyntaxFactory.ExpressionStatement(
                                 SyntaxFactory.ParseExpression(
-                                    underlyingType == ObjectDataType.Int || underlyingType == ObjectDataType.Char
+                                    underlyingType is ObjectDataType.Int or ObjectDataType.Char
                                         ? $"return ({typeModel.Identifier})value"
                                         : $"return baseObject.Db.Get{typeModel.Identifier}(value.{nameof(War3Net.Common.Extensions.StringExtensions.FromRawcode)}())")),
                         });
@@ -1283,7 +1340,7 @@ namespace War3Api.Generator.Object
                         {
                             SyntaxFactory.ExpressionStatement(
                                 SyntaxFactory.ParseExpression(
-                                    underlyingType == ObjectDataType.Int || underlyingType == ObjectDataType.Char
+                                    underlyingType is ObjectDataType.Int or ObjectDataType.Char
                                         ? $"return ({dataTypeModel.Identifier})value"
                                         : $"return value.Key.{nameof(Int32Extensions.ToRawcode)}()")),
                         });

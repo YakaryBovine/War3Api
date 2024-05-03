@@ -135,7 +135,6 @@ namespace War3Api.Generator.Object
                             DataConstants.AbilityClassName,
                             ObjectApiGenerator.GetProperties(
                                 abilityType.UniqueName,
-                                DataConstants.AbilityTypeEnumName,
                                 properties.Values.Where(propertyModel => propertyModel.Specifics.Contains(abilityType.Value)),
                                 false,
                                 false,
