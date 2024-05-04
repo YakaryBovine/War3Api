@@ -92,13 +92,20 @@ public sealed class SkinStringsRepository
                 var splitPosition = line.IndexOf('=', StringComparison.Ordinal);
                 var key = line[..splitPosition];
                 var values = line[(splitPosition + 1)..];
-                var cleanedValues = CleanCasterUpgradeString(key, values);
+                var cleanedValues = CleanValue(key, values);
                 var newSkinField = new SkinField(cleanedValues);
                 activeSkinData!.TryAddField(key, newSkinField);
             }
         }
     }
 
-    private static string CleanCasterUpgradeString(string key, string value) =>
-        key == "Casterupgradetip" ? value.Replace("\"", string.Empty) : value;
+    private static string CleanValue(string key, string value)
+    {
+        return key switch
+        {
+            "Researchtip" => value.Split(",")[0],
+            "Casterupgradetip" => value.Replace("\"", string.Empty),
+            _ => value
+        };
+    }
 }
