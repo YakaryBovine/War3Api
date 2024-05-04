@@ -849,7 +849,7 @@ namespace War3Api.Generator.Object
                    dataTypeModel.Type != dataTypeModel.UnderlyingType;
         }
 
-        private static string GetPropertyValue(ObjectDataType objectDataType, object value)
+        internal static string GetPropertyValue(ObjectDataType objectDataType, object value)
         {
             return objectDataType switch
             {
