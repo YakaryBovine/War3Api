@@ -117,6 +117,10 @@ namespace War3Api.Generator.Object
 
             yield return DestructableSkinPath;
             yield return DoodadSkinsPath;
+            yield return @"units\unitskin.txt";
+            yield return @"units\abilityskin.txt";
+            yield return @"units\itemskin.txt";
+            yield return @"units\upgradeskin.txt";
 
             yield return @"units\campaignabilityfunc.txt";
             yield return @"units\campaignunitfunc.txt";
