@@ -105,6 +105,7 @@ public sealed class SkinStringsRepository
         {
             "Researchtip" => value.Split(",")[0],
             "Casterupgradetip" => value.Replace("\"", string.Empty),
+            "Researchubertip" => value.Split('"')[0],
             _ => value
         };
     }
