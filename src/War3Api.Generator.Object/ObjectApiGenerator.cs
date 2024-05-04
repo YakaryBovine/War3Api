@@ -856,7 +856,7 @@ namespace War3Api.Generator.Object
                 ObjectDataType.Int => value is null or string ? $"{default(int)}" : $"{value}",
                 ObjectDataType.Real => value is null or string ? $"{default(float)}f" : $"{value}f",
                 ObjectDataType.Unreal => value is null or string ? $"{default(float)}f" : $"{value}f",
-                ObjectDataType.String => value is null ? "null" : $"\"{Localize((string)value).Trim('"').Replace("\\", @"\\", StringComparison.Ordinal)}\"",
+                ObjectDataType.String => value is null ? "null" : $"\"{Localize((string)value).TrimEnd(' ').Trim('"').Replace("\\", @"\\", StringComparison.Ordinal)}\"",
 
                 _ => throw new InvalidEnumArgumentException(nameof(objectDataType), (int)objectDataType, typeof(ObjectDataType)),
             };

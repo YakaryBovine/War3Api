@@ -23,7 +23,7 @@ namespace War3Api.Generator.Object.Tests
         }
 
         [TestCase(ObjectDataType.String,
-            "\"Drops a Sentry Ward to spy upon an area for <AIsw,Dur1> seconds. |nContains <wswd,uses> charges.\"",
+            "\"Drops a Sentry Ward to spy upon an area for <AIsw,Dur1> seconds. |nContains <wswd,uses> charges.\" ",
             "\"Drops a Sentry Ward to spy upon an area for <AIsw,Dur1> seconds. |nContains <wswd,uses> charges.\"")]
         public void GetPropertyValueReturnsExpectedValue(ObjectDataType objectDataType, string value, string expectedOutput)
         {

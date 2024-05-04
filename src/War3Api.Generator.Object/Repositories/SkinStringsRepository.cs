@@ -92,7 +92,8 @@ public sealed class SkinStringsRepository
                 var splitPosition = line.IndexOf('=', StringComparison.Ordinal);
                 var key = line[..splitPosition];
                 var values = line[(splitPosition + 1)..];
-                var newSkinField = new SkinField(values);
+                var cleanedValues = CleanCasterUpgradeString(key, values);
+                var newSkinField = new SkinField(cleanedValues);
                 activeSkinData!.TryAddField(key, newSkinField);
             }
         }
