@@ -759,7 +759,13 @@ namespace War3Api.Generator.Object
             }
             else
             {
-                if (_skinStringsRepository.TryGetValue(Utils.IdToFourCc(objectType.Value), propertyModel.DataName,
+                var fieldName = propertyModel.DataName;
+                //This is a work-around for the fact that Button Position is expressed in a single line, despite being two values.
+                if (fieldName == "Buttonpos")
+                {
+                    fieldName = propertyModel.UniqueName == "ArtButtonPositionX" ? "Buttonposx" : "Buttonposy";
+                }
+                if (_skinStringsRepository.TryGetValue(Utils.IdToFourCc(objectType.Value), fieldName,
                         out var value))
                 {
                     var propertyValue =
@@ -851,15 +857,33 @@ namespace War3Api.Generator.Object
 
         internal static string GetPropertyValue(ObjectDataType objectDataType, object value)
         {
-            return objectDataType switch
+            switch (objectDataType)
             {
-                ObjectDataType.Int => value is null or string ? $"{default(int)}" : $"{value}",
-                ObjectDataType.Real => value is null or string ? $"{default(float)}f" : $"{value}f",
-                ObjectDataType.Unreal => value is null or string ? $"{default(float)}f" : $"{value}f",
-                ObjectDataType.String => value is null ? "null" : $"\"{Localize((string)value).TrimEnd(' ').Trim('"').Replace("\\", @"\\", StringComparison.Ordinal)}\"",
-
-                _ => throw new InvalidEnumArgumentException(nameof(objectDataType), (int)objectDataType, typeof(ObjectDataType)),
-            };
+                case ObjectDataType.Int:
+                    return value switch
+                    {
+                        null => $"{default(int)}",
+                        string valueAsString when int.TryParse(valueAsString, out var valueAsInt) => $"{valueAsInt}",
+                        _ => $"{value}"
+                    };
+                case ObjectDataType.Real:
+                case ObjectDataType.Unreal:
+                    return value switch
+                    {
+                        null => $"{default(int)}",
+                        string valueAsString when float.TryParse(valueAsString, out var valueAsFloat) => $"{valueAsFloat}f",
+                        _ => $"{value}"
+                    };
+                case ObjectDataType.String:
+                    return value is null
+                        ? "null"
+                        : $"\"{Localize((string)value).TrimEnd(' ').Trim('"').Replace("\\", @"\\", StringComparison.Ordinal)}\"";
+                case ObjectDataType.Bool:
+                    break;
+                case ObjectDataType.Char:
+                    break;
+            }
+            throw new InvalidEnumArgumentException(nameof(objectDataType), (int)objectDataType, typeof(ObjectDataType));
         }
 
         internal static string Localize(string value)

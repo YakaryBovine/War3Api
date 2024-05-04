@@ -28,7 +28,7 @@ public sealed class SkinStringsRepository
     /// Tries to get the value of a particular skin's field, according to any skin file.
     /// </summary>
     /// <returns>True if a value was provided in the out parameter.</returns>
-    public bool TryGetValue(string skinId, string fieldName, int level, [NotNullWhen(true)] out string? value)
+    public bool TryGetValue(string skinId, string fieldName, int level, [NotNullWhen(true)] out object? value)
     {
         if (_skinValuesBySkinId.TryGetValue(skinId, out var skinData))
         {
@@ -46,7 +46,7 @@ public sealed class SkinStringsRepository
     /// Tries to get the value of a particular skin's field, according to any skin file.
     /// </summary>
     /// <returns>True if a value was provided in the out parameter.</returns>
-    public bool TryGetValue(string skinId, string fieldName, [NotNullWhen(true)] out string? value)
+    public bool TryGetValue(string skinId, string fieldName, [NotNullWhen(true)] out object? value)
     {
         if (_skinValuesBySkinId.TryGetValue(skinId, out var skinData))
         {
@@ -89,14 +89,35 @@ public sealed class SkinStringsRepository
             }
             else
             {
-                var splitPosition = line.IndexOf('=', StringComparison.Ordinal);
-                var key = line[..splitPosition];
-                var values = line[(splitPosition + 1)..];
-                var cleanedValues = CleanValue(key, values);
-                var newSkinField = new SkinField(cleanedValues);
-                activeSkinData!.TryAddField(key, newSkinField);
+                AddSkinFieldFromLine(activeSkinData, line);
             }
         }
+    }
+
+    private static void AddSkinFieldFromLine(SkinData? activeSkinData, string line)
+    {
+        var splitPosition = line.IndexOf('=', StringComparison.Ordinal);
+        var key = line[..splitPosition];
+        var values = line[(splitPosition + 1)..];
+        //This is a ludicrous workaround for the fact that Button Position, despite being two values, is expressed in
+        //one line, e.g. Buttonpos=2,0
+        if (key == "Buttonpos")
+        {
+            var splitValues = values.Split(',');
+            AddSkinField(activeSkinData, "Buttonposx", splitValues[0]);
+            AddSkinField(activeSkinData, "Buttonposy", splitValues[1]);
+        }
+        else
+        {
+            AddSkinField(activeSkinData, key, values);
+        }
+    }
+
+    private static void AddSkinField(SkinData? activeSkinData, string key, string values)
+    {
+        var cleanedValues = CleanValue(key, values);
+        var newSkinField = new SkinField(cleanedValues);
+        activeSkinData!.TryAddField(key, newSkinField);
     }
 
     private static string CleanValue(string key, string value)

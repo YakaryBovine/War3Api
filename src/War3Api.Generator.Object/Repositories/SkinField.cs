@@ -4,9 +4,9 @@ namespace War3Api.Generator.Object.Repositories;
 
 public sealed class SkinField
 {
-    private readonly Dictionary<int, string> _valuesByLevel;
+    private readonly Dictionary<int, object> _valuesByLevel;
 
-    public string Value { get; }
+    public object Value { get; }
 
     public SkinField(string value)
     {
@@ -14,15 +14,15 @@ public sealed class SkinField
         Value = value;
     }
 
-    public bool TryGetValueByLevel(int level, out string value)
+    public bool TryGetValueByLevel(int level, out object value)
     {
         return _valuesByLevel.TryGetValue(level, out value);
     }
 
-    private static Dictionary<int, string> SplitValueByLevel(string value)
+    private static Dictionary<int, object> SplitValueByLevel(string value)
     {
         var i = 1;
-        var valuesByLevel = new Dictionary<int, string>();
+        var valuesByLevel = new Dictionary<int, object>();
         var splitType = value.StartsWith("\"") ? "\",\"" : ",";
 
         foreach (var leveledValue in value.Split(splitType))
