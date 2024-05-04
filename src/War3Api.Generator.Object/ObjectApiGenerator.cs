@@ -761,9 +761,9 @@ namespace War3Api.Generator.Object
             {
                 var fieldName = propertyModel.DataName;
                 //This is a work-around for the fact that Button Position is expressed in a single line, despite being two values.
-                if (fieldName == "Buttonpos")
+                if (fieldName.EndsWith("buttonpos", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    fieldName = propertyModel.UniqueName == "ArtButtonPositionX" ? "Buttonposx" : "Buttonposy";
+                    fieldName = $"{fieldName}{char.ToLower(uniqueName.Last(), CultureInfo.InvariantCulture)}";
                 }
                 if (_skinStringsRepository.TryGetValue(Utils.IdToFourCc(objectType.Value), fieldName,
                         out var value))
