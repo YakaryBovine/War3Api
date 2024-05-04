@@ -101,11 +101,11 @@ public sealed class SkinStringsRepository
         var values = line[(splitPosition + 1)..];
         //This is a ludicrous workaround for the fact that Button Position, despite being two values, is expressed in
         //one line, e.g. Buttonpos=2,0
-        if (key == "Buttonpos")
+        if (key.EndsWith("buttonpos", StringComparison.InvariantCultureIgnoreCase))
         {
             var splitValues = values.Split(',');
-            AddSkinField(activeSkinData, "Buttonposx", splitValues[0]);
-            AddSkinField(activeSkinData, "Buttonposy", splitValues[1]);
+            AddSkinField(activeSkinData, $"{key}x", splitValues[0]);
+            AddSkinField(activeSkinData, $"{key}y", splitValues[1]);
         }
         else
         {

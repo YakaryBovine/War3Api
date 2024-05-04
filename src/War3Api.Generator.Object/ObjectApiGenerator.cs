@@ -864,15 +864,18 @@ namespace War3Api.Generator.Object
                     {
                         null => $"{default(int)}",
                         string valueAsString when int.TryParse(valueAsString, out var valueAsInt) => $"{valueAsInt}",
+                        string => $"{default(int)}",
                         _ => $"{value}"
                     };
+
                 case ObjectDataType.Real:
                 case ObjectDataType.Unreal:
                     return value switch
                     {
-                        null => $"{default(int)}",
+                        null => $"{default(float)}",
                         string valueAsString when float.TryParse(valueAsString, out var valueAsFloat) => $"{valueAsFloat}f",
-                        _ => $"{value}"
+                        string => $"{default(float)}",
+                        _ => $"{value}f"
                     };
                 case ObjectDataType.String:
                     return value is null
