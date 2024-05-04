@@ -117,6 +117,30 @@ namespace War3Api.Generator.Object
 
             yield return DestructableSkinPath;
             yield return DoodadSkinsPath;
+
+            yield return @"units\campaignabilityfunc.txt";
+            yield return @"units\campaignunitfunc.txt";
+            yield return @"units\campaignupgradefunc.txt";
+            yield return @"units\commonabilityfunc.txt";
+            yield return @"units\humanabilityfunc.txt";
+            yield return @"units\humanunitfunc.txt";
+            yield return @"units\humanupgradefunc.txt";
+            yield return @"units\itemabilityfunc.txt";
+            yield return @"units\itemfunc.txt";
+            yield return @"units\neutralabilityfunc.txt";
+            yield return @"units\neutralunitfunc.txt";
+            yield return @"units\neutralupgradefunc.txt";
+            yield return @"units\nightelfabilityfunc.txt";
+            yield return @"units\nightelfunitfunc.txt";
+            yield return @"units\nightelfupgradefunc.txt";
+            yield return @"units\orcabilityfunc.txt";
+            yield return @"units\orcunitfunc.txt";
+            yield return @"units\orcupgradefunc.txt";
+            yield return @"units\undeadabilityfunc.txt";
+            yield return @"units\undeadunitfunc.txt";
+            yield return @"units\undeadupgradefunc.txt";
+            yield return @"units\unitweaponsfunc.txt";
+            yield return @"units\orcupgradefunc.txt";
         }
     }
 }

@@ -70,7 +70,7 @@ public sealed class SkinStringsRepository
         {
             var line = stringsReader.ReadLine();
 
-            if (string.IsNullOrEmpty(line) || line.StartsWith('/'))
+            if (string.IsNullOrWhiteSpace(line) || line.StartsWith('/'))
             {
                 continue;
             }
